@@ -1,0 +1,91 @@
+name: Kart Arenası APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip dosyasını aç (varsa)
+        run: |
+          ZIP=$(ls -1 *.zip 2>/dev/null | head -n1 || true)
+          if [ -n "$ZIP" ]; then
+            echo "Açılıyor: $ZIP"
+            rm -rf /tmp/src && mkdir -p /tmp/src
+            unzip -q -o "$ZIP" -d /tmp/src
+            ITEMS=$(ls -A /tmp/src)
+            if [ "$(echo "$ITEMS" | wc -l)" = "1" ] && [ -d "/tmp/src/$ITEMS" ]; then SRC="/tmp/src/$ITEMS"; else SRC=/tmp/src; fi
+            cp -a "$SRC"/. .
+            echo "SRC=$SRC" >> "$GITHUB_ENV"
+          fi
+          if [ ! -f package.json ]; then
+            echo "::error::package.json bulunamadı. KartArenasi.zip dosyasını deponun ana klasörüne yükleyin."
+            exit 1
+          fi
+
+      - name: Sunucu için açık kaynak dalı (kaynak)
+        if: env.SRC != ''
+        run: |
+          T=$(mktemp -d)
+          cp -a "$SRC"/. "$T"
+          rm -rf "$T/.github"
+          cd "$T"
+          git init -q -b kaynak
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Kart Arenası kaynak kodu ($GITHUB_SHA)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" kaynak
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Bağımlılıkları kur
+        run: npm ci
+
+      - name: Tip kontrolü ve tüm testler
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Uygulamayı derle
+        env:
+          VITE_SERVER_URL: ${{ vars.SERVER_URL }}
+        run: npm run build
+
+      - name: Android projesi, ikon ve açılış ekranı
+        working-directory: apps/client
+        run: |
+          npx cap add android
+          npx capacitor-assets generate --android --assetPath ../../assets --iconBackgroundColor '#2B1A12' --splashBackgroundColor '#2B1A12'
+          npx cap sync android
+
+      - name: APK oluştur
+        working-directory: apps/client/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK'yı adlandır
+        run: cp apps/client/android/app/build/outputs/apk/debug/app-debug.apk KartArenasi.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KartArenasi-APK
+          path: KartArenasi.apk
+          retention-days: 30
