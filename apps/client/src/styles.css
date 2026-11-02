@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+html, body, #root { min-height: 100%; }
+body {
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  background:
+    repeating-linear-gradient(92deg, rgba(255,255,255,.018) 0 2px, transparent 2px 9px),
+    radial-gradient(120% 80% at 50% 0%, #4A2F21 0%, #2B1A12 60%, #1E120C 100%);
+  background-attachment: fixed;
+  color: #FAF5EA;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: none;
+  user-select: none;
+}
+input, textarea { user-select: text; }
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition active:scale-[.97] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pirinc-300; }
+  .btn-brass { @apply btn bg-pirinc text-ceviz shadow-[inset_0_-3px_0_rgba(0,0,0,.25)] hover:bg-pirinc-300; }
+  .btn-ghost { @apply btn bg-white/5 text-fildisi ring-1 ring-white/10 hover:bg-white/10; }
+  .btn-red { @apply btn bg-cay text-fildisi hover:bg-cay-300; }
+  .field { @apply w-full rounded-xl bg-black/25 px-3 py-2.5 text-fildisi ring-1 ring-white/10 placeholder:text-duman focus:outline-none focus:ring-2 focus:ring-pirinc; }
+  .panel { @apply rounded-2xl bg-ceviz-700/80 ring-1 ring-white/5 backdrop-blur; }
+  .chip { @apply rounded-full px-2.5 py-1 text-xs font-medium; }
+  .felt {
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.08), transparent 60%),
+      repeating-radial-gradient(circle at 30% 20%, rgba(0,0,0,.04) 0 1px, transparent 1px 3px),
+      #1E5A45;
+    box-shadow: inset 0 0 0 6px #9C7429, inset 0 0 0 9px #2B1A12, inset 0 0 60px rgba(0,0,0,.45), 0 20px 40px rgba(0,0,0,.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

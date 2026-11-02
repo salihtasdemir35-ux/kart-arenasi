@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+apps/client/android/
+*.log
+.DS_Store
+.wrangler/
